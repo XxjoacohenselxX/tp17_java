@@ -1,3 +1,5 @@
+package evaluacion;
+
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -25,10 +27,10 @@ public class EvaluacionesApp extends Application {
         apellidoCol.setCellValueFactory(cellData -> cellData.getValue().apellidoProperty());
 
         TableColumn<Evaluacion, String> dniCol = new TableColumn<>("DNI");
-        dniCol.setCellValueFactory(cellData -> cellData.getValue().DNIProperty());
+//FIXME        dniCol.setCellValueFactory(cellData -> cellData.getValue().DNIProperty());
 
         TableColumn<Evaluacion, String> emailCol = new TableColumn<>("Email");
-        emailCol.setCellValueFactory(cellData -> cellData.getValue().emailProperty());
+//FIXME        emailCol.setCellValueFactory(cellData -> cellData.getValue().emailProperty());
 
         // Agrega más columnas según sea necesario
 
@@ -49,14 +51,14 @@ public class EvaluacionesApp extends Application {
     }
 
     private void loadData() {
-        try {
-            List<Evaluacion> evaluaciones = dao.readAll(0, 20);
-            ObservableList<Evaluacion> data = FXCollections.observableArrayList(evaluaciones);
-            table.setItems(data);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            // Maneja el error de manera adecuada, por ejemplo, mostrando un mensaje al usuario
-        }
+//        try {
+////FIXME            List<Evaluacion> evaluaciones = dao.readAll(0, 20);
+////FIXME            ObservableList<Evaluacion> data = FXCollections.observableArrayList(evaluaciones);
+////FIXME            table.setItems(data);
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//            // Maneja el error de manera adecuada, por ejemplo, mostrando un mensaje al usuario
+//        }
     }
 
     private void showNewEvaluacionDialog() {

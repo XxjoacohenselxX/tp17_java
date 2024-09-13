@@ -1,6 +1,7 @@
-module com.example.evaluacionescrud {
+module evaluacion {
     requires javafx.controls;
     requires javafx.fxml;
+    opens evaluacion to javafx.fxml;
     requires java.sql;
     requires mysql.connector.java;
     requires junit.jupiter.api; // Opcional para pruebas

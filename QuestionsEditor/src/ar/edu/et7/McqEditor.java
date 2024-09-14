@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class McqEditor extends JFrame {
     private JTextField txtTitle, txtCategory, txtPoints;
-    private JTextArea txtStimulus, txtPrompt; // Cambiados a JTextArea
+    private JTextArea txtStimulus, txtPrompt;
     private JTextField[] txtChoices = new JTextField[4];
     private JTextField txtAnswers;
     private JButton btnSave, btnNext, btnInsert, btnDelete;
@@ -26,44 +26,78 @@ public class McqEditor extends JFrame {
         objectMapper = new ObjectMapper();
 
         setTitle("MCQ Editor");
-        setSize(600, 400);
+        setSize(600, 800);  // Ajusta el tamaño de la ventana para que se vea mejor
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Crear el panel del formulario
-        JPanel formPanel = new JPanel(new GridLayout(10, 2, 5, 5));
+        // Crear el panel del formulario usando GridBagLayout para más control
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5); // Espacio alrededor de los componentes
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1;
 
-        formPanel.add(new JLabel("Title:"));
+        // Title
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        formPanel.add(new JLabel("Title:"), gbc);
+        gbc.gridx = 1;
         txtTitle = new JTextField();
-        formPanel.add(txtTitle);
+        formPanel.add(txtTitle, gbc);
 
-        formPanel.add(new JLabel("Category:"));
+        // Category
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        formPanel.add(new JLabel("Category:"), gbc);
+        gbc.gridx = 1;
         txtCategory = new JTextField();
-        formPanel.add(txtCategory);
+        formPanel.add(txtCategory, gbc);
 
-        formPanel.add(new JLabel("Stimulus:"));
-        txtStimulus = new JTextArea(8, 20); // Cambiar el número de filas a 8
+        // Stimulus
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        formPanel.add(new JLabel("Stimulus:"), gbc);
+        gbc.gridx = 1;
+        txtStimulus = new JTextArea(8, 20); // 8 líneas de altura
         JScrollPane scrollStimulus = new JScrollPane(txtStimulus);
-        formPanel.add(scrollStimulus);
+        scrollStimulus.setPreferredSize(new Dimension(200, 150)); // Asegura el tamaño preferido
+        formPanel.add(scrollStimulus, gbc);
 
-        formPanel.add(new JLabel("Prompt:"));
-        txtPrompt = new JTextArea(8, 20); // Cambiar el número de filas a 8
+        // Prompt
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        formPanel.add(new JLabel("Prompt:"), gbc);
+        gbc.gridx = 1;
+        txtPrompt = new JTextArea(8, 20); // 8 líneas de altura
         JScrollPane scrollPrompt = new JScrollPane(txtPrompt);
-        formPanel.add(scrollPrompt);
+        scrollPrompt.setPreferredSize(new Dimension(200, 150)); // Asegura el tamaño preferido
+        formPanel.add(scrollPrompt, gbc);
 
-        formPanel.add(new JLabel("Points:"));
+        // Points
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        formPanel.add(new JLabel("Points:"), gbc);
+        gbc.gridx = 1;
         txtPoints = new JTextField();
-        formPanel.add(txtPoints);
+        formPanel.add(txtPoints, gbc);
 
+        // Choices
         for (int i = 0; i < 4; i++) {
-            formPanel.add(new JLabel("Choice " + (char) ('A' + i) + ":"));
+            gbc.gridx = 0;
+            gbc.gridy = 5 + i;
+            formPanel.add(new JLabel("Choice " + (char) ('A' + i) + ":"), gbc);
+            gbc.gridx = 1;
             txtChoices[i] = new JTextField();
-            formPanel.add(txtChoices[i]);
+            formPanel.add(txtChoices[i], gbc);
         }
 
-        formPanel.add(new JLabel("Answers:"));
+        // Answers
+        gbc.gridx = 0;
+        gbc.gridy = 9;
+        formPanel.add(new JLabel("Answers:"), gbc);
+        gbc.gridx = 1;
         txtAnswers = new JTextField();
-        formPanel.add(txtAnswers);
+        formPanel.add(txtAnswers, gbc);
 
         // Crear botones
         JPanel buttonPanel = new JPanel();

@@ -14,8 +14,10 @@ public class McqEditor extends JFrame {
     private JTextField txtTitle, txtCategory, txtPoints;
     private JTextArea txtStimulus, txtPrompt;
     private JTextField[] txtChoices = new JTextField[4];
+    private JCheckBox[] chkRightAnswer = new JCheckBox[4];
+    private JLabel[] lblChoicePoints = new JLabel[4]; // Etiquetas para mostrar el puntaje dividido
     private JTextField txtAnswers;
-    private JButton btnSave, btnNext, btnInsert, btnDelete, btnPrevious; // Añadir btnPrevious
+    private JButton btnSave, btnNext, btnInsert, btnDelete, btnPrevious;
     private JFileChooser fileChooser;
     private ArrayNode questionsArray;
     private int currentIndex = -1;
@@ -26,14 +28,13 @@ public class McqEditor extends JFrame {
         objectMapper = new ObjectMapper();
 
         setTitle("MCQ Editor");
-        setSize(600, 800);  // Ajusta el tamaño de la ventana para que se vea mejor
+        setSize(600, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Crear el panel del formulario usando GridBagLayout para más control
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5); // Espacio alrededor de los componentes
+        gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1;
 
@@ -58,9 +59,9 @@ public class McqEditor extends JFrame {
         gbc.gridy = 2;
         formPanel.add(new JLabel("Stimulus:"), gbc);
         gbc.gridx = 1;
-        txtStimulus = new JTextArea(8, 20); // 8 líneas de altura
+        txtStimulus = new JTextArea(8, 20);
         JScrollPane scrollStimulus = new JScrollPane(txtStimulus);
-        scrollStimulus.setPreferredSize(new Dimension(200, 150)); // Asegura el tamaño preferido
+        scrollStimulus.setPreferredSize(new Dimension(200, 150));
         formPanel.add(scrollStimulus, gbc);
 
         // Prompt
@@ -68,9 +69,9 @@ public class McqEditor extends JFrame {
         gbc.gridy = 3;
         formPanel.add(new JLabel("Prompt:"), gbc);
         gbc.gridx = 1;
-        txtPrompt = new JTextArea(8, 20); // 8 líneas de altura
+        txtPrompt = new JTextArea(8, 20);
         JScrollPane scrollPrompt = new JScrollPane(txtPrompt);
-        scrollPrompt.setPreferredSize(new Dimension(200, 150)); // Asegura el tamaño preferido
+        scrollPrompt.setPreferredSize(new Dimension(200, 150));
         formPanel.add(scrollPrompt, gbc);
 
         // Points
@@ -80,44 +81,57 @@ public class McqEditor extends JFrame {
         gbc.gridx = 1;
         txtPoints = new JTextField();
         formPanel.add(txtPoints, gbc);
+        txtPoints.addKeyListener(new KeyAdapter() {
+            public void keyReleased(KeyEvent e) {
+                updateChoicePoints();
+            }
+        });
 
-        // Choices
+        // Choices with Right Answer checkbox and Points label
         for (int i = 0; i < 4; i++) {
             gbc.gridx = 0;
             gbc.gridy = 5 + i;
             formPanel.add(new JLabel("Choice " + (char) ('A' + i) + ":"), gbc);
+
             gbc.gridx = 1;
             txtChoices[i] = new JTextField();
             formPanel.add(txtChoices[i], gbc);
+
+            gbc.gridx = 2;
+            chkRightAnswer[i] = new JCheckBox("Right Answer");
+            formPanel.add(chkRightAnswer[i], gbc);
+            chkRightAnswer[i].addActionListener(e -> updateChoicePoints());
+
+            gbc.gridx = 3;
+            lblChoicePoints[i] = new JLabel("Points: 0");
+            formPanel.add(lblChoicePoints[i], gbc);
         }
 
-        // Answers
+        // Answers (hidden or removed in this case)
         gbc.gridx = 0;
         gbc.gridy = 9;
         formPanel.add(new JLabel("Answers:"), gbc);
         gbc.gridx = 1;
         txtAnswers = new JTextField();
+        txtAnswers.setVisible(false);  // Ocultar el campo de respuestas
         formPanel.add(txtAnswers, gbc);
 
-        // Crear botones
         JPanel buttonPanel = new JPanel();
         btnSave = new JButton("Save Question");
         btnNext = new JButton("Next Question");
-        btnPrevious = new JButton("Previous Question"); // Nuevo botón
+        btnPrevious = new JButton("Previous Question");
         btnInsert = new JButton("Insert Question");
         btnDelete = new JButton("Delete Question");
 
         buttonPanel.add(btnSave);
-        buttonPanel.add(btnPrevious); // Añadir btnPrevious
+        buttonPanel.add(btnPrevious);
         buttonPanel.add(btnNext);
         buttonPanel.add(btnInsert);
         buttonPanel.add(btnDelete);
 
-        // Añadir los paneles al frame
         add(formPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
 
-        // Crear el menú
         JMenuBar menuBar = new JMenuBar();
         JMenu menuFile = new JMenu("File");
 
@@ -131,18 +145,40 @@ public class McqEditor extends JFrame {
         menuBar.add(menuFile);
         setJMenuBar(menuBar);
 
-        // Funcionalidad de los botones
+        // Action listeners
         menuOpen.addActionListener(e -> openFile());
         menuSave.addActionListener(e -> saveFile(false));
         menuSaveAs.addActionListener(e -> saveFile(true));
         btnSave.addActionListener(e -> saveCurrentQuestion());
         btnNext.addActionListener(e -> nextQuestion());
-        btnPrevious.addActionListener(e -> previousQuestion()); // Acción para el botón previo
+        btnPrevious.addActionListener(e -> previousQuestion());
         btnInsert.addActionListener(e -> insertNewQuestion());
         btnDelete.addActionListener(e -> deleteCurrentQuestion());
     }
 
- // Método para abrir un archivo JSON
+    // Updates the points for each choice based on the total points and right answers
+    private void updateChoicePoints() {
+        int totalPoints = Integer.parseInt(txtPoints.getText().isEmpty() ? "0" : txtPoints.getText());
+        int rightAnswerCount = 0;
+        
+        // Count how many choices are marked as right answers
+        for (JCheckBox chk : chkRightAnswer) {
+            if (chk.isSelected()) {
+                rightAnswerCount++;
+            }
+        }
+
+        // Calculate and update the points for each choice
+        for (int i = 0; i < 4; i++) {
+            if (chkRightAnswer[i].isSelected() && rightAnswerCount > 0) {
+                lblChoicePoints[i].setText("Points: " + (totalPoints / rightAnswerCount));
+            } else {
+                lblChoicePoints[i].setText("Points: 0");
+            }
+        }
+    }
+
+    // Método para abrir un archivo JSON
     private void openFile() {
         fileChooser = new JFileChooser();
         int result = fileChooser.showOpenDialog(this);
@@ -150,26 +186,20 @@ public class McqEditor extends JFrame {
         if (result == JFileChooser.APPROVE_OPTION) {
             currentFile = fileChooser.getSelectedFile();
             try {
-                // Cargar el archivo JSON
                 JsonNode rootNode = objectMapper.readTree(currentFile);
-
-                // Verificar si el nodo raíz es un ArrayNode
                 if (rootNode.isArray()) {
                     questionsArray = (ArrayNode) rootNode;
                 } else {
                     JOptionPane.showMessageDialog(this, "The file format is incorrect. Expected an array of questions.", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-
-                // Verificar si el archivo contiene preguntas
                 if (questionsArray.size() > 0) {
-                    currentIndex = 0;  // Inicializar el índice
-                    loadQuestion(currentIndex);  // Cargar la primera pregunta
+                    currentIndex = 0;
+                    loadQuestion(currentIndex);
                 } else {
                     JOptionPane.showMessageDialog(this, "The file is empty.", "Info", JOptionPane.INFORMATION_MESSAGE);
-                    clearForm();  // Limpiar el formulario si no hay preguntas
+                    clearForm();
                 }
-
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(this, "Error loading file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }

@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.text.DecimalFormat;
 import java.util.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,7 +16,7 @@ public class McqEditor extends JFrame {
     private JTextArea txtStimulus, txtPrompt;
     private JTextField[] txtChoices = new JTextField[4];
     private JCheckBox[] chkRightAnswer = new JCheckBox[4];
-    private JLabel[] lblChoicePoints = new JLabel[4]; // Etiquetas para mostrar el puntaje dividido
+    private JLabel[] lblPointsPerChoice = new JLabel[4];  // Etiqueta para mostrar el puntaje por Choice
     private JTextField txtAnswers;
     private JButton btnSave, btnNext, btnInsert, btnDelete, btnPrevious;
     private JFileChooser fileChooser;
@@ -23,12 +24,13 @@ public class McqEditor extends JFrame {
     private int currentIndex = -1;
     private File currentFile;
     private ObjectMapper objectMapper;
+    private DecimalFormat df = new DecimalFormat("#.00");  // Formato para 2 decimales
 
     public McqEditor() {
         objectMapper = new ObjectMapper();
 
         setTitle("MCQ Editor");
-        setSize(600, 800);
+        setSize(600, 800);  
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -81,32 +83,29 @@ public class McqEditor extends JFrame {
         gbc.gridx = 1;
         txtPoints = new JTextField();
         formPanel.add(txtPoints, gbc);
-        txtPoints.addKeyListener(new KeyAdapter() {
-            public void keyReleased(KeyEvent e) {
-                updateChoicePoints();
-            }
-        });
 
-        // Choices with Right Answer checkbox and Points label
+        // Choices
         for (int i = 0; i < 4; i++) {
             gbc.gridx = 0;
             gbc.gridy = 5 + i;
             formPanel.add(new JLabel("Choice " + (char) ('A' + i) + ":"), gbc);
-
+            
             gbc.gridx = 1;
             txtChoices[i] = new JTextField();
             formPanel.add(txtChoices[i], gbc);
 
+            // Checkbox for Right Answer
             gbc.gridx = 2;
             chkRightAnswer[i] = new JCheckBox("Right Answer");
-            formPanel.add(chkRightAnswer[i], gbc);
             chkRightAnswer[i].addActionListener(e -> updateChoicePoints());
+            formPanel.add(chkRightAnswer[i], gbc);
 
+            // Label for points per choice
             gbc.gridx = 3;
-            lblChoicePoints[i] = new JLabel("Points: 0");
-            formPanel.add(lblChoicePoints[i], gbc);
+            lblPointsPerChoice[i] = new JLabel("0.00");
+            formPanel.add(lblPointsPerChoice[i], gbc);
         }
-
+        
         // Answers (hidden or removed in this case)
         gbc.gridx = 0;
         gbc.gridy = 9;
@@ -115,11 +114,13 @@ public class McqEditor extends JFrame {
         txtAnswers = new JTextField();
         txtAnswers.setVisible(false);  // Ocultar el campo de respuestas
         formPanel.add(txtAnswers, gbc);
+        
 
+        // Crear botones
         JPanel buttonPanel = new JPanel();
         btnSave = new JButton("Save Question");
         btnNext = new JButton("Next Question");
-        btnPrevious = new JButton("Previous Question");
+        btnPrevious = new JButton("Previous Question"); 
         btnInsert = new JButton("Insert Question");
         btnDelete = new JButton("Delete Question");
 
@@ -154,29 +155,56 @@ public class McqEditor extends JFrame {
         btnPrevious.addActionListener(e -> previousQuestion());
         btnInsert.addActionListener(e -> insertNewQuestion());
         btnDelete.addActionListener(e -> deleteCurrentQuestion());
+        txtPoints.addActionListener(e -> updateChoicePoints());  // Update when points change
     }
 
-    // Updates the points for each choice based on the total points and right answers
+    // Método para actualizar los puntajes de los choices
     private void updateChoicePoints() {
-        int totalPoints = Integer.parseInt(txtPoints.getText().isEmpty() ? "0" : txtPoints.getText());
-        int rightAnswerCount = 0;
-        
-        // Count how many choices are marked as right answers
-        for (JCheckBox chk : chkRightAnswer) {
-            if (chk.isSelected()) {
-                rightAnswerCount++;
-            }
-        }
+        try {
+            double totalPoints = Double.parseDouble(txtPoints.getText());
+            int rightAnswersCount = 0;
 
-        // Calculate and update the points for each choice
-        for (int i = 0; i < 4; i++) {
-            if (chkRightAnswer[i].isSelected() && rightAnswerCount > 0) {
-                lblChoicePoints[i].setText("Points: " + (totalPoints / rightAnswerCount));
-            } else {
-                lblChoicePoints[i].setText("Points: 0");
+            // Contar cuántos choices están marcados como Right Answer
+            for (JCheckBox chk : chkRightAnswer) {
+                if (chk.isSelected()) {
+                    rightAnswersCount++;
+                }
             }
+
+            if (rightAnswersCount > 0) {
+                // Calcular el puntaje por choice
+                double basePointsPerChoice = totalPoints / rightAnswersCount;
+                double sumOfPoints = 0;
+
+                for (int i = 0; i < chkRightAnswer.length; i++) {
+                    if (chkRightAnswer[i].isSelected()) {
+                        // Aplicar el formato a 2 decimales
+                        double choicePoints = Double.parseDouble(df.format(basePointsPerChoice));
+                        lblPointsPerChoice[i].setText(df.format(choicePoints));
+                        sumOfPoints += choicePoints;
+                    } else {
+                        lblPointsPerChoice[i].setText("0.00");
+                    }
+                }
+
+                // Ajustar el primer choice si hay diferencia
+                double difference = totalPoints - sumOfPoints;
+                if (Math.abs(difference) > 0.001 && chkRightAnswer[0].isSelected()) {
+                    double adjustedPoints = basePointsPerChoice + difference;
+                    lblPointsPerChoice[0].setText(df.format(adjustedPoints));
+                }
+            } else {
+                // Si no hay respuestas correctas seleccionadas
+                for (JLabel lbl : lblPointsPerChoice) {
+                    lbl.setText("0.00");
+                }
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Invalid number format in Points field", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
+    // Otros métodos se mantienen igual...
 
     // Método para abrir un archivo JSON
     private void openFile() {

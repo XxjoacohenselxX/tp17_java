@@ -155,7 +155,7 @@ public class McqEditor extends JFrame {
             }
 
             ArrayNode answers = (ArrayNode) question.get("answers").get(0);
-            //FIXME txtAnswers.setText(String.join(",", getArrayAsStringList(answers)));
+            txtAnswers.setText(String.join(",", getArrayAsStringList(answers)));
         }
     }
 
@@ -225,13 +225,13 @@ public class McqEditor extends JFrame {
     }
 
     // Utilidad para convertir ArrayNode a lista de Strings
-//    private List<String> getArrayAsStringList(ArrayNode arrayNode) {
-//        List<String> list = new ArrayList<>();
-//        for (JsonNode node : arrayNode) {
-//            list.add(node.asText());
-//        }
-//        return list;
-//    }
+    private java.util.List<String> getArrayAsStringList(ArrayNode arrayNode) {
+        java.util.List<String> list = new ArrayList<>();
+        for (JsonNode node : arrayNode) {
+            list.add(node.asText());
+        }
+        return list;
+    }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {

@@ -197,7 +197,7 @@ public class McqEditor extends JFrame {
 
     // Otros métodos se mantienen igual...
 
-    // Método para abrir un archivo JSON
+ // Método para abrir un archivo JSON
     private void openFile() {
         fileChooser = new JFileChooser();
         int result = fileChooser.showOpenDialog(this);
@@ -222,6 +222,11 @@ public class McqEditor extends JFrame {
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(this, "Error loading file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
+        }
+
+        // Asegurar que questionsArray esté inicializado si el archivo está vacío
+        if (questionsArray == null) {
+            questionsArray = objectMapper.createArrayNode();
         }
     }
 
@@ -361,6 +366,11 @@ public class McqEditor extends JFrame {
     private void insertNewQuestion() {
         clearForm();  // Limpiar el formulario antes de permitir la inserción
 
+        // Inicializar el arreglo si es null
+        if (questionsArray == null) {
+            questionsArray = objectMapper.createArrayNode();
+        }
+
         ObjectNode newQuestion = objectMapper.createObjectNode();  // Crear una nueva pregunta vacía
 
         // Inicializar los campos de la nueva pregunta
@@ -399,6 +409,11 @@ public class McqEditor extends JFrame {
     
  // Método para ir a la siguiente pregunta
     private void nextQuestion() {
+        if (questionsArray == null || questionsArray.size() == 0) {
+            JOptionPane.showMessageDialog(this, "No questions available.", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
         if (currentIndex < questionsArray.size() - 1) {
             saveCurrentQuestion();  // Guardar la pregunta actual antes de pasar a la siguiente
             currentIndex++;  // Incrementar el índice

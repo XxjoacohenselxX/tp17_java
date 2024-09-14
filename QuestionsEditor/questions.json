@@ -1,0 +1,158 @@
+[
+  {
+    "title": "Java Basics",
+    "category": "MCQ",
+    "stimulus": "Fundamental Concepts",
+    "prompt": "¿Qué tipo de lenguaje es Java?",
+    "choices": [
+      {
+        "id": "a",
+        "content": "Lenguaje de bajo nivel"
+      },
+      {
+        "id": "b",
+        "content": "Lenguaje de alto nivel"
+      },
+      {
+        "id": "c",
+        "content": "Lenguaje ensamblador"
+      },
+      {
+        "id": "d",
+        "content": "Lenguaje de máquina"
+      }
+    ],
+    "points": 10,
+    "answers": [ [ "b" ] ]
+  },
+  {
+    "title": "Java Syntax",
+    "category": "MCQ",
+    "stimulus": "Syntax Rules",
+    "prompt": "¿Cómo se declara una variable de tipo entero en Java?",
+    "choices": [
+      {
+        "id": "a",
+        "content": "int x;"
+      },
+      {
+        "id": "b",
+        "content": "integer x;"
+      },
+      {
+        "id": "c",
+        "content": "int xabcaaa1;"
+      },
+      {
+        "id": "d",
+        "content": "var x;"
+      }
+    ],
+    "points": 10,
+    "answers": [ [ "a"] ]
+  },
+  {
+    "title": "Java OOP",
+    "category": "MCQ",
+    "stimulus": "Object-Oriented Programming",
+    "prompt": "¿Qué es la encapsulación en Java?",
+    "choices": [
+      {
+        "id": "a",
+        "content": "La capacidad de una clase de heredar atributos y métodos de otra clase."
+      },
+      {
+        "id": "b",
+        "content": "La habilidad de un objeto para ser modificado por otros objetos."
+      },
+      {
+        "id": "c",
+        "content": "La práctica de ocultar los detalles internos de un objeto y exponer solo lo necesario."
+      },
+      {
+        "id": "d",
+        "content": "La habilidad de un objeto para cambiar su tipo durante la ejecución."
+      }
+    ],
+    "points": 10,
+    "answers": [ [ "c" ] ]
+  },
+  {
+    "title": "Java Inheritance",
+    "category": "MCQ",
+    "stimulus": "Inheritance Concept",
+    "prompt": "¿Cómo se declara una clase que hereda de otra en Java?",
+    "choices": [
+      {
+        "id": "a",
+        "content": "class SubClass extends SuperClass {}"
+      },
+      {
+        "id": "b",
+        "content": "class SubClass inherits SuperClass {}"
+      },
+      {
+        "id": "c",
+        "content": "class SubClass : SuperClass {}"
+      },
+      {
+        "id": "d",
+        "content": "class SubClass super SuperClass {}"
+      }
+    ],
+    "points": 10,
+    "answers": [ [ "a" ] ]
+  },
+  {
+    "title": "Java Interfaces",
+    "category": "MCQ",
+    "stimulus": "Interface Implementation",
+    "prompt": "¿Cómo se define una interfaz en Java?",
+    "choices": [
+      {
+        "id": "a",
+        "content": "interface InterfaceName {}"
+      },
+      {
+        "id": "b",
+        "content": "class InterfaceName {}"
+      },
+      {
+        "id": "c",
+        "content": "interface InterfaceName extends ClassName {}"
+      },
+      {
+        "id": "d",
+        "content": "public class InterfaceName {}"
+      }
+    ],
+    "points": 10,
+    "answers": [ [ "a" ] ]
+  },
+  {
+    "title": "Java Exceptions",
+    "category": "MCQ",
+    "stimulus": "Exception Handling",
+    "prompt": "¿Cómo se maneja una excepción en Java?",
+    "choices": [
+      {
+        "id": "a",
+        "content": "try-catch block"
+      },
+      {
+        "id": "b",
+        "content": "error-handler block"
+      },
+      {
+        "id": "c",
+        "content": "handle block"
+      },
+      {
+        "id": "d",
+        "content": "catch-try block"
+      }
+    ],
+    "points": 10,
+    "answers": [ [ "a" ] ]
+  }
+]

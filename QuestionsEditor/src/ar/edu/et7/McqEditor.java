@@ -15,7 +15,7 @@ public class McqEditor extends JFrame {
     private JTextArea txtStimulus, txtPrompt;
     private JTextField[] txtChoices = new JTextField[4];
     private JTextField txtAnswers;
-    private JButton btnSave, btnNext, btnInsert, btnDelete;
+    private JButton btnSave, btnNext, btnInsert, btnDelete, btnPrevious; // Añadir btnPrevious
     private JFileChooser fileChooser;
     private ArrayNode questionsArray;
     private int currentIndex = -1;
@@ -103,10 +103,12 @@ public class McqEditor extends JFrame {
         JPanel buttonPanel = new JPanel();
         btnSave = new JButton("Save Question");
         btnNext = new JButton("Next Question");
+        btnPrevious = new JButton("Previous Question"); // Nuevo botón
         btnInsert = new JButton("Insert Question");
         btnDelete = new JButton("Delete Question");
 
         buttonPanel.add(btnSave);
+        buttonPanel.add(btnPrevious); // Añadir btnPrevious
         buttonPanel.add(btnNext);
         buttonPanel.add(btnInsert);
         buttonPanel.add(btnDelete);
@@ -135,6 +137,7 @@ public class McqEditor extends JFrame {
         menuSaveAs.addActionListener(e -> saveFile(true));
         btnSave.addActionListener(e -> saveCurrentQuestion());
         btnNext.addActionListener(e -> nextQuestion());
+        btnPrevious.addActionListener(e -> previousQuestion()); // Acción para el botón previo
         btnInsert.addActionListener(e -> insertNewQuestion());
         btnDelete.addActionListener(e -> deleteCurrentQuestion());
     }
@@ -274,7 +277,7 @@ public class McqEditor extends JFrame {
                 clearForm();
             }
         } else {
-            JOptionPane.showMessageDialog(this, "No question to delete.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "This is the first question.", "Info", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -294,7 +297,8 @@ public class McqEditor extends JFrame {
     
  // Método para insertar una nueva pregunta
     private void insertNewQuestion() {
-        saveCurrentQuestion();  // Guardar la pregunta actual antes de insertar una nueva
+        clearForm();  // Limpiar el formulario antes de permitir la inserción
+
         ObjectNode newQuestion = objectMapper.createObjectNode();  // Crear una nueva pregunta vacía
 
         // Inicializar los campos de la nueva pregunta
@@ -317,11 +321,17 @@ public class McqEditor extends JFrame {
         ArrayNode answers = objectMapper.createArrayNode();
         newQuestion.set("answers", answers);
 
-        // Agregar la nueva pregunta al array de preguntas
-        questionsArray.add(newQuestion);
-        currentIndex = questionsArray.size() - 1;  // Establecer el índice actual en la nueva pregunta
+        // Insertar la nueva pregunta en la posición actual
+        if (currentIndex >= 0 && currentIndex < questionsArray.size()) {
+            questionsArray.insert(currentIndex + 1, newQuestion);
+            currentIndex++;  // Mover al índice de la nueva pregunta
+        } else {
+            questionsArray.add(newQuestion);  // Si no hay preguntas, añadir al final
+            currentIndex = questionsArray.size() - 1;  // Actualizar el índice
+        }
 
-        loadQuestion(currentIndex);  // Cargar la nueva pregunta en el formulario
+        // No cargar la pregunta directamente; el formulario ya está vacío
+        JOptionPane.showMessageDialog(this, "New question inserted. Please fill out the fields and press 'Save Question' to save.", "Info", JOptionPane.INFORMATION_MESSAGE);
     }
 
     
@@ -336,4 +346,14 @@ public class McqEditor extends JFrame {
         }
     }
     
+    // Método para ir a la pregunta anterior
+    private void previousQuestion() {
+        if (currentIndex > 0) {
+            saveCurrentQuestion();  // Guardar la pregunta actual antes de retroceder
+            currentIndex--;  // Decrementar el índice
+            loadQuestion(currentIndex);  // Cargar la pregunta anterior
+        } else {
+            JOptionPane.showMessageDialog(this, "This is the first question.", "Info", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }    
 }

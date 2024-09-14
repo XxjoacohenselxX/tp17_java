@@ -11,18 +11,19 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class McqEditor extends JFrame {
-    private JTextField txtTitle, txtCategory, txtStimulus, txtPrompt, txtPoints;
+    private JTextField txtTitle, txtCategory, txtPoints;
+    private JTextArea txtStimulus, txtPrompt; // Cambiados a JTextArea
     private JTextField[] txtChoices = new JTextField[4];
     private JTextField txtAnswers;
     private JButton btnSave, btnNext, btnInsert, btnDelete;
     private JFileChooser fileChooser;
-    private ArrayNode questionsArray;  // Usaremos ArrayNode para manejar el array de preguntas
+    private ArrayNode questionsArray;
     private int currentIndex = -1;
     private File currentFile;
-    private ObjectMapper objectMapper; // Jackson ObjectMapper para manejar JSON
+    private ObjectMapper objectMapper;
 
     public McqEditor() {
-        objectMapper = new ObjectMapper();  // Inicializamos el ObjectMapper
+        objectMapper = new ObjectMapper();
 
         setTitle("MCQ Editor");
         setSize(600, 400);
@@ -41,12 +42,14 @@ public class McqEditor extends JFrame {
         formPanel.add(txtCategory);
 
         formPanel.add(new JLabel("Stimulus:"));
-        txtStimulus = new JTextField();
-        formPanel.add(txtStimulus);
+        txtStimulus = new JTextArea(8, 20); // Cambiar el número de filas a 8
+        JScrollPane scrollStimulus = new JScrollPane(txtStimulus);
+        formPanel.add(scrollStimulus);
 
         formPanel.add(new JLabel("Prompt:"));
-        txtPrompt = new JTextField();
-        formPanel.add(txtPrompt);
+        txtPrompt = new JTextArea(8, 20); // Cambiar el número de filas a 8
+        JScrollPane scrollPrompt = new JScrollPane(txtPrompt);
+        formPanel.add(scrollPrompt);
 
         formPanel.add(new JLabel("Points:"));
         txtPoints = new JTextField();
@@ -64,10 +67,10 @@ public class McqEditor extends JFrame {
 
         // Crear botones
         JPanel buttonPanel = new JPanel();
-        btnSave = new JButton("Save");
-        btnNext = new JButton("Next");
-        btnInsert = new JButton("Insert");
-        btnDelete = new JButton("Delete");
+        btnSave = new JButton("Save Question");
+        btnNext = new JButton("Next Question");
+        btnInsert = new JButton("Insert Question");
+        btnDelete = new JButton("Delete Question");
 
         buttonPanel.add(btnSave);
         buttonPanel.add(btnNext);
@@ -102,7 +105,7 @@ public class McqEditor extends JFrame {
         btnDelete.addActionListener(e -> deleteCurrentQuestion());
     }
 
-    // Método para abrir un archivo JSON
+ // Método para abrir un archivo JSON
     private void openFile() {
         fileChooser = new JFileChooser();
         int result = fileChooser.showOpenDialog(this);
@@ -110,9 +113,26 @@ public class McqEditor extends JFrame {
         if (result == JFileChooser.APPROVE_OPTION) {
             currentFile = fileChooser.getSelectedFile();
             try {
-                questionsArray = (ArrayNode) objectMapper.readTree(currentFile);  // Cargar el JSON como ArrayNode
-                currentIndex = 0;
-                loadQuestion(currentIndex);
+                // Cargar el archivo JSON
+                JsonNode rootNode = objectMapper.readTree(currentFile);
+
+                // Verificar si el nodo raíz es un ArrayNode
+                if (rootNode.isArray()) {
+                    questionsArray = (ArrayNode) rootNode;
+                } else {
+                    JOptionPane.showMessageDialog(this, "The file format is incorrect. Expected an array of questions.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Verificar si el archivo contiene preguntas
+                if (questionsArray.size() > 0) {
+                    currentIndex = 0;  // Inicializar el índice
+                    loadQuestion(currentIndex);  // Cargar la primera pregunta
+                } else {
+                    JOptionPane.showMessageDialog(this, "The file is empty.", "Info", JOptionPane.INFORMATION_MESSAGE);
+                    clearForm();  // Limpiar el formulario si no hay preguntas
+                }
+
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(this, "Error loading file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -188,41 +208,7 @@ public class McqEditor extends JFrame {
         }
     }
 
-    // Método para ir a la siguiente pregunta
-    private void nextQuestion() {
-        if (currentIndex < questionsArray.size() - 1) {
-            saveCurrentQuestion();
-            currentIndex++;
-            loadQuestion(currentIndex);
-        } else {
-            JOptionPane.showMessageDialog(this, "No more questions.", "Info", JOptionPane.INFORMATION_MESSAGE);
-        }
-    }
-
-    // Método para insertar una nueva pregunta
-    private void insertNewQuestion() {
-        saveCurrentQuestion();
-        ObjectNode newQuestion = objectMapper.createObjectNode();
-        newQuestion.put("title", "");
-        newQuestion.put("category", "");
-        newQuestion.put("stimulus", "");
-        newQuestion.put("prompt", "");
-        newQuestion.put("points", 0);
-        newQuestion.set("choices", objectMapper.createArrayNode());
-        newQuestion.set("answers", objectMapper.createArrayNode());
-        questionsArray.add(newQuestion);
-        currentIndex = questionsArray.size() - 1;
-        loadQuestion(currentIndex);
-    }
-
-    // Método para eliminar la pregunta actual
-    private void deleteCurrentQuestion() {
-        if (currentIndex >= 0 && currentIndex < questionsArray.size()) {
-            questionsArray.remove(currentIndex);
-            if (currentIndex > 0) currentIndex--;
-            loadQuestion(currentIndex);
-        }
-    }
+    // Otros métodos se mantienen igual...
 
     // Utilidad para convertir ArrayNode a lista de Strings
     private java.util.List<String> getArrayAsStringList(ArrayNode arrayNode) {
@@ -238,4 +224,82 @@ public class McqEditor extends JFrame {
             new McqEditor().setVisible(true);
         });
     }
+    
+ // Método para eliminar la pregunta actual
+    private void deleteCurrentQuestion() {
+        if (currentIndex >= 0 && currentIndex < questionsArray.size()) {
+            questionsArray.remove(currentIndex);  // Remover la pregunta actual
+            if (questionsArray.size() > 0) {
+                // Si hay más preguntas, cargamos la anterior o la siguiente
+                if (currentIndex > 0) {
+                    currentIndex--;
+                }
+                loadQuestion(currentIndex);  // Cargar la siguiente pregunta
+            } else {
+                // Si no hay preguntas, limpiamos el formulario
+                clearForm();
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "No question to delete.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // Método para limpiar el formulario cuando no hay preguntas
+    private void clearForm() {
+        txtTitle.setText("");
+        txtCategory.setText("");
+        txtStimulus.setText("");
+        txtPrompt.setText("");
+        txtPoints.setText("");
+        for (int i = 0; i < 4; i++) {
+            txtChoices[i].setText("");
+        }
+        txtAnswers.setText("");
+    }
+
+    
+ // Método para insertar una nueva pregunta
+    private void insertNewQuestion() {
+        saveCurrentQuestion();  // Guardar la pregunta actual antes de insertar una nueva
+        ObjectNode newQuestion = objectMapper.createObjectNode();  // Crear una nueva pregunta vacía
+
+        // Inicializar los campos de la nueva pregunta
+        newQuestion.put("title", "");
+        newQuestion.put("category", "");
+        newQuestion.put("stimulus", "");
+        newQuestion.put("prompt", "");
+        newQuestion.put("points", 0);
+
+        // Inicializar los choices y respuestas vacíos
+        ArrayNode choices = objectMapper.createArrayNode();
+        for (int i = 0; i < 4; i++) {
+            ObjectNode choice = objectMapper.createObjectNode();
+            choice.put("id", String.valueOf((char) ('a' + i)));  // Opción A, B, C, D
+            choice.put("content", "");
+            choices.add(choice);
+        }
+        newQuestion.set("choices", choices);
+
+        ArrayNode answers = objectMapper.createArrayNode();
+        newQuestion.set("answers", answers);
+
+        // Agregar la nueva pregunta al array de preguntas
+        questionsArray.add(newQuestion);
+        currentIndex = questionsArray.size() - 1;  // Establecer el índice actual en la nueva pregunta
+
+        loadQuestion(currentIndex);  // Cargar la nueva pregunta en el formulario
+    }
+
+    
+ // Método para ir a la siguiente pregunta
+    private void nextQuestion() {
+        if (currentIndex < questionsArray.size() - 1) {
+            saveCurrentQuestion();  // Guardar la pregunta actual antes de pasar a la siguiente
+            currentIndex++;  // Incrementar el índice
+            loadQuestion(currentIndex);  // Cargar la siguiente pregunta en el formulario
+        } else {
+            JOptionPane.showMessageDialog(this, "No more questions.", "Info", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+    
 }

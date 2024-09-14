@@ -12,12 +12,13 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class McqEditor extends JFrame {
+    private static final int MAX_CHOICES = 10; // Cantidad máxima de choices
+
     private JTextField txtTitle, txtCategory, txtPoints;
     private JTextArea txtStimulus, txtPrompt;
-    private JTextField[] txtChoices = new JTextField[4];
-    private JCheckBox[] chkRightAnswer = new JCheckBox[4];
-    private JLabel[] lblPointsPerChoice = new JLabel[4];  // Etiqueta para mostrar el puntaje por Choice
-    //private JTextField txtAnswers;
+    private JTextField[] txtChoices = new JTextField[MAX_CHOICES];
+    private JCheckBox[] chkRightAnswer = new JCheckBox[MAX_CHOICES];
+    private JLabel[] lblPointsPerChoice = new JLabel[MAX_CHOICES];  // Etiqueta para mostrar el puntaje por Choice
     private JButton btnSave, btnNext, btnInsert, btnDelete, btnPrevious;
     private JFileChooser fileChooser;
     private ArrayNode questionsArray;
@@ -85,7 +86,7 @@ public class McqEditor extends JFrame {
         formPanel.add(txtPoints, gbc);
 
         // Choices
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < MAX_CHOICES; i++) {
             gbc.gridx = 0;
             gbc.gridy = 5 + i;
             formPanel.add(new JLabel("Choice " + (char) ('A' + i) + ":"), gbc);
@@ -105,16 +106,6 @@ public class McqEditor extends JFrame {
             lblPointsPerChoice[i] = new JLabel("0.00");
             formPanel.add(lblPointsPerChoice[i], gbc);
         }
-        
-        // Answers (hidden or removed in this case)
-//        gbc.gridx = 0;
-//        gbc.gridy = 9;
-//        formPanel.add(new JLabel("Answers:"), gbc);
-//        gbc.gridx = 1;
-//        txtAnswers = new JTextField();
-//        txtAnswers.setVisible(false);  // Ocultar el campo de respuestas
-//        formPanel.add(txtAnswers, gbc);
-        
 
         // Crear botones
         JPanel buttonPanel = new JPanel();
@@ -266,29 +257,27 @@ public class McqEditor extends JFrame {
 
             // Marcar checkboxes según las respuestas correctas
             ArrayNode answers = (ArrayNode) question.get("answers");
-            for (int i = 0; i < chkRightAnswer.length; i++) {
+            for (int i = 0; i < MAX_CHOICES; i++) {
                 chkRightAnswer[i].setSelected(false);  // Desmarcar todos
+                txtChoices[i].setText(""); // Limpiar choices no usados
             }
 
             ArrayNode choices = (ArrayNode) question.get("choices");
             for (int i = 0; i < choices.size(); i++) {
-            	/*System.out.println("content: " + choices.get(i).get("content").asText() +
-            			" - id: " + choices.get(i).get("id").asText()
-            			);*/
                 txtChoices[i].setText(choices.get(i).get("content").asText());
 
                 // Marcar los que son respuestas correctas
                 for (JsonNode answer : answers) {
-                	if(answer.asText().compareTo(choices.get(i).get("id").asText()) == 0) {
+                    if (answer.asText().compareTo(choices.get(i).get("id").asText()) == 0) {
                         chkRightAnswer[i].setSelected(true);
-                	}
+                    }
                 }
             }
             updateChoicePoints();
         }
     }
 
- // Método para guardar la pregunta actual en el JSON
+    // Método para guardar la pregunta actual en el JSON
     private void saveCurrentQuestion() {
         if (currentIndex >= 0 && currentIndex < questionsArray.size()) {
             ObjectNode question = (ObjectNode) questionsArray.get(currentIndex);
@@ -298,23 +287,23 @@ public class McqEditor extends JFrame {
             question.put("prompt", txtPrompt.getText());
             question.put("points", Double.parseDouble(txtPoints.getText()));
 
-            // Guardar los choices
             ArrayNode choices = objectMapper.createArrayNode();
-            for (int i = 0; i < 4; i++) {
-                ObjectNode choice = objectMapper.createObjectNode();
-                choice.put("id", String.valueOf((char) ('a' + i)));
-                choice.put("content", txtChoices[i].getText());
-                choices.add(choice);
-            }
-            question.set("choices", choices);
-
-            // Guardar las respuestas correctas según los checkboxes seleccionados
             ArrayNode answers = objectMapper.createArrayNode();
-            for (int i = 0; i < chkRightAnswer.length; i++) {
-                if (chkRightAnswer[i].isSelected()) {
-                    answers.add(String.valueOf((char) ('a' + i)));  // Agregar 'a', 'b', 'c' o 'd'
+
+            for (int i = 0; i < MAX_CHOICES; i++) {
+                if (!txtChoices[i].getText().isEmpty()) {
+                    ObjectNode choice = objectMapper.createObjectNode();
+                    choice.put("id", UUID.randomUUID().toString());
+                    choice.put("content", txtChoices[i].getText());
+                    choices.add(choice);
+
+                    if (chkRightAnswer[i].isSelected()) {
+                        answers.add(choice.get("id"));
+                    }
                 }
             }
+
+            question.set("choices", choices);
             question.set("answers", answers);
         }
     }
@@ -365,6 +354,7 @@ public class McqEditor extends JFrame {
         }
         //txtAnswers.setText("");
     }
+
 
     
  // Método para insertar una nueva pregunta

@@ -17,7 +17,7 @@ public class McqEditor extends JFrame {
     private JTextField[] txtChoices = new JTextField[4];
     private JCheckBox[] chkRightAnswer = new JCheckBox[4];
     private JLabel[] lblPointsPerChoice = new JLabel[4];  // Etiqueta para mostrar el puntaje por Choice
-    private JTextField txtAnswers;
+    //private JTextField txtAnswers;
     private JButton btnSave, btnNext, btnInsert, btnDelete, btnPrevious;
     private JFileChooser fileChooser;
     private ArrayNode questionsArray;
@@ -107,13 +107,13 @@ public class McqEditor extends JFrame {
         }
         
         // Answers (hidden or removed in this case)
-        gbc.gridx = 0;
-        gbc.gridy = 9;
-        formPanel.add(new JLabel("Answers:"), gbc);
-        gbc.gridx = 1;
-        txtAnswers = new JTextField();
-        txtAnswers.setVisible(false);  // Ocultar el campo de respuestas
-        formPanel.add(txtAnswers, gbc);
+//        gbc.gridx = 0;
+//        gbc.gridy = 9;
+//        formPanel.add(new JLabel("Answers:"), gbc);
+//        gbc.gridx = 1;
+//        txtAnswers = new JTextField();
+//        txtAnswers.setVisible(false);  // Ocultar el campo de respuestas
+//        formPanel.add(txtAnswers, gbc);
         
 
         // Crear botones
@@ -262,19 +262,33 @@ public class McqEditor extends JFrame {
             txtCategory.setText(question.get("category").asText());
             txtStimulus.setText(question.get("stimulus").asText());
             txtPrompt.setText(question.get("prompt").asText());
-            txtPoints.setText(String.valueOf(question.get("points").asInt()));
+            txtPoints.setText(String.valueOf(question.get("points").asDouble()));
+
+            // Marcar checkboxes según las respuestas correctas
+            ArrayNode answers = (ArrayNode) question.get("answers");
+            for (int i = 0; i < chkRightAnswer.length; i++) {
+                chkRightAnswer[i].setSelected(false);  // Desmarcar todos
+            }
 
             ArrayNode choices = (ArrayNode) question.get("choices");
             for (int i = 0; i < choices.size(); i++) {
+            	/*System.out.println("content: " + choices.get(i).get("content").asText() +
+            			" - id: " + choices.get(i).get("id").asText()
+            			);*/
                 txtChoices[i].setText(choices.get(i).get("content").asText());
-            }
 
-            ArrayNode answers = (ArrayNode) question.get("answers").get(0);
-            txtAnswers.setText(String.join(",", getArrayAsStringList(answers)));
+                // Marcar los que son respuestas correctas
+                for (JsonNode answer : answers) {
+                	if(answer.asText().compareTo(choices.get(i).get("id").asText()) == 0) {
+                        chkRightAnswer[i].setSelected(true);
+                	}
+                }
+            }
+            updateChoicePoints();
         }
     }
 
-    // Método para guardar la pregunta actual en el JSON
+ // Método para guardar la pregunta actual en el JSON
     private void saveCurrentQuestion() {
         if (currentIndex >= 0 && currentIndex < questionsArray.size()) {
             ObjectNode question = (ObjectNode) questionsArray.get(currentIndex);
@@ -282,8 +296,9 @@ public class McqEditor extends JFrame {
             question.put("category", txtCategory.getText());
             question.put("stimulus", txtStimulus.getText());
             question.put("prompt", txtPrompt.getText());
-            question.put("points", Integer.parseInt(txtPoints.getText()));
+            question.put("points", Double.parseDouble(txtPoints.getText()));
 
+            // Guardar los choices
             ArrayNode choices = objectMapper.createArrayNode();
             for (int i = 0; i < 4; i++) {
                 ObjectNode choice = objectMapper.createObjectNode();
@@ -293,17 +308,16 @@ public class McqEditor extends JFrame {
             }
             question.set("choices", choices);
 
+            // Guardar las respuestas correctas según los checkboxes seleccionados
             ArrayNode answers = objectMapper.createArrayNode();
-            ArrayNode answerList = objectMapper.createArrayNode();
-            for (String answer : txtAnswers.getText().split(",")) {
-                answerList.add(answer.trim());
+            for (int i = 0; i < chkRightAnswer.length; i++) {
+                if (chkRightAnswer[i].isSelected()) {
+                    answers.add(String.valueOf((char) ('a' + i)));  // Agregar 'a', 'b', 'c' o 'd'
+                }
             }
-            answers.add(answerList);
             question.set("answers", answers);
         }
     }
-
-    // Otros métodos se mantienen igual...
 
     // Utilidad para convertir ArrayNode a lista de Strings
     private java.util.List<String> getArrayAsStringList(ArrayNode arrayNode) {
@@ -349,7 +363,7 @@ public class McqEditor extends JFrame {
         for (int i = 0; i < 4; i++) {
             txtChoices[i].setText("");
         }
-        txtAnswers.setText("");
+        //txtAnswers.setText("");
     }
 
     

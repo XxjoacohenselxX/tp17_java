@@ -27,10 +27,10 @@ public class EvaluacionesApp extends Application {
         apellidoCol.setCellValueFactory(cellData -> cellData.getValue().apellidoProperty());
 
         TableColumn<Evaluacion, String> dniCol = new TableColumn<>("DNI");
-//FIXME        dniCol.setCellValueFactory(cellData -> cellData.getValue().DNIProperty());
+        dniCol.setCellValueFactory(cellData -> cellData.getValue().DNIProperty());
 
         TableColumn<Evaluacion, String> emailCol = new TableColumn<>("Email");
-//FIXME        emailCol.setCellValueFactory(cellData -> cellData.getValue().emailProperty());
+        emailCol.setCellValueFactory(cellData -> cellData.getValue().emailProperty());
 
         // Agrega más columnas según sea necesario
 
@@ -51,14 +51,14 @@ public class EvaluacionesApp extends Application {
     }
 
     private void loadData() {
-//        try {
-////FIXME            List<Evaluacion> evaluaciones = dao.readAll(0, 20);
-////FIXME            ObservableList<Evaluacion> data = FXCollections.observableArrayList(evaluaciones);
-////FIXME            table.setItems(data);
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//            // Maneja el error de manera adecuada, por ejemplo, mostrando un mensaje al usuario
-//        }
+        try {
+            List<Evaluacion> evaluaciones = dao.readAll(0, 20);
+            ObservableList<Evaluacion> data = FXCollections.observableArrayList(evaluaciones);
+            table.setItems(data);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Maneja el error de manera adecuada, por ejemplo, mostrando un mensaje al usuario
+        }
     }
 
     private void showNewEvaluacionDialog() {

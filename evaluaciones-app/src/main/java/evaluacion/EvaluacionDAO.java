@@ -6,33 +6,32 @@ import java.util.List;
 
 public class EvaluacionDAO {
 
-    public List<Evaluacion> getAllEvaluaciones() throws SQLException {
+    public List<Evaluacion> readAll(int offset, int limit) throws SQLException {
+        String query = "SELECT * FROM Evaluaciones LIMIT ? OFFSET ?";
         List<Evaluacion> evaluaciones = new ArrayList<>();
-        String query = "SELECT nombre, apellido FROM Evaluaciones";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(query)) {
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setInt(1, limit);
+            stmt.setInt(2, offset);
+            ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                String nombre = rs.getString("nombre");
-                String apellido = rs.getString("apellido");
-                evaluaciones.add(new Evaluacion(nombre, apellido));
+                Evaluacion evaluacion = new Evaluacion();
+                evaluacion.setId(rs.getInt("id"));
+                evaluacion.setNombre(rs.getString("nombre"));
+                evaluacion.setApellido(rs.getString("apellido"));
+                evaluacion.setDNI(rs.getString("DNI"));
+                evaluacion.setFechaProgramadaExamen(rs.getTimestamp("fecha_programada_examen"));
+                evaluacion.setFechaInicioExamen(rs.getTimestamp("fecha_inicio_examen"));
+                evaluacion.setFechaFinExamen(rs.getTimestamp("fecha_fin_examen"));
+                evaluacion.setPuntaje(rs.getDouble("puntaje"));
+                evaluacion.setEmail(rs.getString("email"));
+                evaluaciones.add(evaluacion);
             }
         }
 
         return evaluaciones;
-    }
-
-    public void insertEvaluacion(Evaluacion evaluacion) throws SQLException {
-        String query = "INSERT INTO Evaluaciones (nombre, apellido) VALUES (?, ?)";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(query)) {
-
-            pstmt.setString(1, evaluacion.nombreProperty().get());
-            pstmt.setString(2, evaluacion.apellidoProperty().get());
-            pstmt.executeUpdate();
-        }
     }
 }

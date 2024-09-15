@@ -31,7 +31,7 @@ public class McqEditor extends JFrame {
         objectMapper = new ObjectMapper();
 
         setTitle("MCQ Editor");
-        setSize(600, 800);  
+        setSize(600, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -98,7 +98,10 @@ public class McqEditor extends JFrame {
             // Checkbox for Right Answer
             gbc.gridx = 2;
             chkRightAnswer[i] = new JCheckBox("Right Answer");
-            chkRightAnswer[i].addActionListener(e -> updateChoicePoints());
+            chkRightAnswer[i].addActionListener(e -> {
+                updateChoicePoints();  // Actualizar puntos
+                updateChoiceHighlights();  // Resaltar la opción
+            });
             formPanel.add(chkRightAnswer[i], gbc);
 
             // Label for points per choice
@@ -195,9 +198,19 @@ public class McqEditor extends JFrame {
         }
     }
 
-    // Otros métodos se mantienen igual...
+    // Método para actualizar el resaltado de los choices seleccionados
+    private void updateChoiceHighlights() {
+        for (int i = 0; i < MAX_CHOICES; i++) {
+            if (chkRightAnswer[i].isSelected()) {
+                txtChoices[i].setBackground(Color.CYAN);  // Resaltar en azul
+            } else {
+                txtChoices[i].setBackground(Color.WHITE);  // Fondo blanco para no seleccionados
+            }
+        }
+    }
 
- // Método para abrir un archivo JSON
+    // Otros métodos se mantienen igual...
+    // Método para abrir un archivo JSON
     private void openFile() {
         fileChooser = new JFileChooser();
         int result = fileChooser.showOpenDialog(this);
@@ -322,12 +335,6 @@ public class McqEditor extends JFrame {
         return list;
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            new McqEditor().setVisible(true);
-        });
-    }
-    
  // Método para eliminar la pregunta actual
     private void deleteCurrentQuestion() {
         if (currentIndex >= 0 && currentIndex < questionsArray.size()) {
@@ -433,4 +440,12 @@ public class McqEditor extends JFrame {
             JOptionPane.showMessageDialog(this, "This is the first question.", "Info", JOptionPane.INFORMATION_MESSAGE);
         }
     }    
+
+    
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new McqEditor().setVisible(true);
+        });
+    }
+    
 }

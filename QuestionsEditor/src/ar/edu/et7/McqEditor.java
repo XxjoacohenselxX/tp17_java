@@ -26,6 +26,7 @@ public class McqEditor extends JFrame {
     private File currentFile;
     private ObjectMapper objectMapper;
     private DecimalFormat df = new DecimalFormat("#.00");  // Formato para 2 decimales
+    private JLabel lblQuestionIndex;  // Nueva etiqueta para mostrar n/t (índice y total)
 
     public McqEditor() {
         objectMapper = new ObjectMapper();
@@ -34,6 +35,12 @@ public class McqEditor extends JFrame {
         setSize(600, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
+
+        // Panel superior para mostrar el índice de la pregunta
+        JPanel topPanel = new JPanel(new BorderLayout());
+        lblQuestionIndex = new JLabel("Question 0/0      ", SwingConstants.RIGHT);
+        topPanel.add(lblQuestionIndex, BorderLayout.EAST);
+        add(topPanel, BorderLayout.NORTH);  // Agregar el panel superior al marco principal
 
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -197,7 +204,7 @@ public class McqEditor extends JFrame {
             JOptionPane.showMessageDialog(this, "Invalid number format in Points field", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-
+    
     // Método para actualizar el resaltado de los choices seleccionados
     private void updateChoiceHighlights() {
         for (int i = 0; i < MAX_CHOICES; i++) {
@@ -208,8 +215,17 @@ public class McqEditor extends JFrame {
             }
         }
     }
+    
 
-    // Otros métodos se mantienen igual...
+    // Método para actualizar el índice de la pregunta (n/t)
+    private void updateQuestionIndexLabel() {
+        if (questionsArray != null) {
+            lblQuestionIndex.setText("Question " + (currentIndex + 1) + "/" + questionsArray.size() + "      ");
+        } else {
+            lblQuestionIndex.setText("Question 0/0      ");
+        }
+    }
+    
     // Método para abrir un archivo JSON
     private void openFile() {
         fileChooser = new JFileChooser();
@@ -242,7 +258,8 @@ public class McqEditor extends JFrame {
             questionsArray = objectMapper.createArrayNode();
         }
     }
-
+    
+    
     // Método para guardar el archivo JSON
     private void saveFile(boolean saveAs) {
         if (currentFile == null || saveAs) {
@@ -262,8 +279,9 @@ public class McqEditor extends JFrame {
             }
         }
     }
+    
 
- // Método para cargar una pregunta del JSON
+    // Método para cargar una pregunta del JSON
     private void loadQuestion(int index) {
         if (index >= 0 && index < questionsArray.size()) {
             JsonNode question = questionsArray.get(index);
@@ -294,6 +312,7 @@ public class McqEditor extends JFrame {
 
             updateChoicePoints();  // Actualizar los puntajes de las respuestas
             updateChoiceHighlights();  // Resaltar las respuestas correctas
+            updateQuestionIndexLabel();  // Actualizar el índice de la pregunta
         }
     }
 
@@ -327,7 +346,7 @@ public class McqEditor extends JFrame {
             question.set("answers", answers);
         }
     }
-
+    
     // Utilidad para convertir ArrayNode a lista de Strings
     private java.util.List<String> getArrayAsStringList(ArrayNode arrayNode) {
         java.util.List<String> list = new ArrayList<>();
@@ -336,8 +355,8 @@ public class McqEditor extends JFrame {
         }
         return list;
     }
-
- // Método para eliminar la pregunta actual
+    
+    // Método para eliminar la pregunta actual
     private void deleteCurrentQuestion() {
         if (currentIndex >= 0 && currentIndex < questionsArray.size()) {
             questionsArray.remove(currentIndex);  // Remover la pregunta actual
@@ -355,7 +374,7 @@ public class McqEditor extends JFrame {
             JOptionPane.showMessageDialog(this, "This is the first question.", "Info", JOptionPane.INFORMATION_MESSAGE);
         }
     }
-
+    
     // Método para limpiar el formulario cuando no hay preguntas
     private void clearForm() {
         txtTitle.setText("");
@@ -368,55 +387,9 @@ public class McqEditor extends JFrame {
         }
         //txtAnswers.setText("");
     }
-
-
     
- // Método para insertar una nueva pregunta
-    private void insertNewQuestion() {
-        clearForm();  // Limpiar el formulario antes de permitir la inserción
-
-        // Inicializar el arreglo si es null
-        if (questionsArray == null) {
-            questionsArray = objectMapper.createArrayNode();
-        }
-
-        ObjectNode newQuestion = objectMapper.createObjectNode();  // Crear una nueva pregunta vacía
-
-        // Inicializar los campos de la nueva pregunta
-        newQuestion.put("title", "");
-        newQuestion.put("category", "");
-        newQuestion.put("stimulus", "");
-        newQuestion.put("prompt", "");
-        newQuestion.put("points", 0);
-
-        // Inicializar los choices y respuestas vacíos
-        ArrayNode choices = objectMapper.createArrayNode();
-        for (int i = 0; i < 4; i++) {
-            ObjectNode choice = objectMapper.createObjectNode();
-            choice.put("id", String.valueOf((char) ('a' + i)));  // Opción A, B, C, D
-            choice.put("content", "");
-            choices.add(choice);
-        }
-        newQuestion.set("choices", choices);
-
-        ArrayNode answers = objectMapper.createArrayNode();
-        newQuestion.set("answers", answers);
-
-        // Insertar la nueva pregunta en la posición actual
-        if (currentIndex >= 0 && currentIndex < questionsArray.size()) {
-            questionsArray.insert(currentIndex + 1, newQuestion);
-            currentIndex++;  // Mover al índice de la nueva pregunta
-        } else {
-            questionsArray.add(newQuestion);  // Si no hay preguntas, añadir al final
-            currentIndex = questionsArray.size() - 1;  // Actualizar el índice
-        }
-
-        // No cargar la pregunta directamente; el formulario ya está vacío
-        JOptionPane.showMessageDialog(this, "New question inserted. Please fill out the fields and press 'Save Question' to save.", "Info", JOptionPane.INFORMATION_MESSAGE);
-    }
-
     
- // Método para ir a la siguiente pregunta
+    // Métodos nextQuestion, previousQuestion y insertNewQuestion ahora actualizan el índice
     private void nextQuestion() {
         if (questionsArray == null || questionsArray.size() == 0) {
             JOptionPane.showMessageDialog(this, "No questions available.", "Info", JOptionPane.INFORMATION_MESSAGE);
@@ -428,26 +401,59 @@ public class McqEditor extends JFrame {
             currentIndex++;  // Incrementar el índice
             loadQuestion(currentIndex);  // Cargar la siguiente pregunta en el formulario
         } else {
-            JOptionPane.showMessageDialog(this, "No more questions.", "Info", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "You are at the last question.", "Info", JOptionPane.INFORMATION_MESSAGE);
         }
     }
-    
-    // Método para ir a la pregunta anterior
-    private void previousQuestion() {
-        if (currentIndex > 0) {
-            saveCurrentQuestion();  // Guardar la pregunta actual antes de retroceder
-            currentIndex--;  // Decrementar el índice
-            loadQuestion(currentIndex);  // Cargar la pregunta anterior
-        } else {
-            JOptionPane.showMessageDialog(this, "This is the first question.", "Info", JOptionPane.INFORMATION_MESSAGE);
-        }
-    }    
 
-    
+    private void previousQuestion() {
+        if (questionsArray == null || questionsArray.size() == 0) {
+            JOptionPane.showMessageDialog(this, "No questions available.", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        if (currentIndex > 0) {
+            saveCurrentQuestion();  // Guardar la pregunta actual antes de pasar a la anterior
+            currentIndex--;  // Decrementar el índice
+            loadQuestion(currentIndex);  // Cargar la pregunta anterior en el formulario
+        } else {
+            JOptionPane.showMessageDialog(this, "You are at the first question.", "Info", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private void insertNewQuestion() {
+        ObjectNode newQuestion = objectMapper.createObjectNode();
+        newQuestion.put("title", "");
+        newQuestion.put("category", "");
+        newQuestion.put("stimulus", "");
+        newQuestion.put("prompt", "");
+        newQuestion.put("points", 0.0);
+
+        ArrayNode choices = objectMapper.createArrayNode();
+        for (int i = 0; i < MAX_CHOICES; i++) {
+            ObjectNode choice = objectMapper.createObjectNode();
+            choice.put("id", UUID.randomUUID().toString());
+            choice.put("content", "");
+            choices.add(choice);
+        }
+        newQuestion.set("choices", choices);
+        newQuestion.set("answers", objectMapper.createArrayNode());
+
+        if (questionsArray == null) {
+            questionsArray = objectMapper.createArrayNode();
+        }
+
+        // Insertar la nueva pregunta en la lista
+        currentIndex++;
+        questionsArray.insert(currentIndex, newQuestion);
+        loadQuestion(currentIndex);  // Cargar la nueva pregunta
+        updateQuestionIndexLabel();  // Actualizar el índice
+    }
+
+    // Otros métodos se mantienen iguales...
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             new McqEditor().setVisible(true);
         });
     }
-    
 }

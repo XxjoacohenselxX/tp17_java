@@ -281,7 +281,7 @@ public class McqEditor extends JFrame {
     }
     
 
-    // Método para cargar una pregunta del JSON
+ // Método para cargar una pregunta del JSON
     private void loadQuestion(int index) {
         if (index >= 0 && index < questionsArray.size()) {
             JsonNode question = questionsArray.get(index);
@@ -291,28 +291,32 @@ public class McqEditor extends JFrame {
             txtPrompt.setText(question.get("prompt").asText());
             txtPoints.setText(String.valueOf(question.get("points").asDouble()));
 
-            // Marcar checkboxes según las respuestas correctas
-            ArrayNode answers = (ArrayNode) question.get("answers");
+            // Limpiar los campos de respuesta antes de cargarlos
             for (int i = 0; i < MAX_CHOICES; i++) {
-                chkRightAnswer[i].setSelected(false);  // Desmarcar todos
-                txtChoices[i].setText("");  // Limpiar choices no usados
+                chkRightAnswer[i].setSelected(false);
+                txtChoices[i].setText("");
             }
 
             ArrayNode choices = (ArrayNode) question.get("choices");
             for (int i = 0; i < choices.size(); i++) {
                 txtChoices[i].setText(choices.get(i).get("content").asText());
+            }
 
-                // Marcar los que son respuestas correctas
-                for (JsonNode answer : answers) {
-                    if (answer.asText().equals(choices.get(i).get("id").asText())) {
-                        chkRightAnswer[i].setSelected(true);
+            // Cargar las respuestas correctas desde un array de arrays
+            ArrayNode answers = (ArrayNode) question.get("answers");
+            for (JsonNode answerArray : answers) {
+                for (JsonNode answer : answerArray) {
+                    for (int i = 0; i < choices.size(); i++) {
+                        if (answer.asText().equals(choices.get(i).get("id").asText())) {
+                            chkRightAnswer[i].setSelected(true);
+                        }
                     }
                 }
             }
 
-            updateChoicePoints();  // Actualizar los puntajes de las respuestas
-            updateChoiceHighlights();  // Resaltar las respuestas correctas
-            updateQuestionIndexLabel();  // Actualizar el índice de la pregunta
+            updateChoicePoints();
+            updateChoiceHighlights();
+            updateQuestionIndexLabel();
         }
     }
 
@@ -327,8 +331,9 @@ public class McqEditor extends JFrame {
             question.put("points", Double.parseDouble(txtPoints.getText()));
 
             ArrayNode choices = objectMapper.createArrayNode();
-            ArrayNode answers = objectMapper.createArrayNode();
+            ArrayNode answers = objectMapper.createArrayNode();  // Array de arrays
 
+            // Iterar sobre los choices y guardar las respuestas correctas
             for (int i = 0; i < MAX_CHOICES; i++) {
                 if (!txtChoices[i].getText().isEmpty()) {
                     ObjectNode choice = objectMapper.createObjectNode();
@@ -337,7 +342,9 @@ public class McqEditor extends JFrame {
                     choices.add(choice);
 
                     if (chkRightAnswer[i].isSelected()) {
-                        answers.add(choice.get("id"));
+                        ArrayNode answerArray = objectMapper.createArrayNode();
+                        answerArray.add(choice.get("id"));
+                        answers.add(answerArray);
                     }
                 }
             }
@@ -346,6 +353,7 @@ public class McqEditor extends JFrame {
             question.set("answers", answers);
         }
     }
+
     
     // Utilidad para convertir ArrayNode a lista de Strings
     private java.util.List<String> getArrayAsStringList(ArrayNode arrayNode) {

@@ -202,7 +202,7 @@ public class McqEditor extends JFrame {
     private void updateChoiceHighlights() {
         for (int i = 0; i < MAX_CHOICES; i++) {
             if (chkRightAnswer[i].isSelected()) {
-                txtChoices[i].setBackground(Color.CYAN);  // Resaltar en azul
+                txtChoices[i].setBackground(Color.YELLOW);  // Resaltar en azul
             } else {
                 txtChoices[i].setBackground(Color.WHITE);  // Fondo blanco para no seleccionados
             }
@@ -263,7 +263,7 @@ public class McqEditor extends JFrame {
         }
     }
 
-    // Método para cargar una pregunta del JSON
+ // Método para cargar una pregunta del JSON
     private void loadQuestion(int index) {
         if (index >= 0 && index < questionsArray.size()) {
             JsonNode question = questionsArray.get(index);
@@ -277,7 +277,7 @@ public class McqEditor extends JFrame {
             ArrayNode answers = (ArrayNode) question.get("answers");
             for (int i = 0; i < MAX_CHOICES; i++) {
                 chkRightAnswer[i].setSelected(false);  // Desmarcar todos
-                txtChoices[i].setText(""); // Limpiar choices no usados
+                txtChoices[i].setText("");  // Limpiar choices no usados
             }
 
             ArrayNode choices = (ArrayNode) question.get("choices");
@@ -286,12 +286,14 @@ public class McqEditor extends JFrame {
 
                 // Marcar los que son respuestas correctas
                 for (JsonNode answer : answers) {
-                    if (answer.asText().compareTo(choices.get(i).get("id").asText()) == 0) {
+                    if (answer.asText().equals(choices.get(i).get("id").asText())) {
                         chkRightAnswer[i].setSelected(true);
                     }
                 }
             }
-            updateChoicePoints();
+
+            updateChoicePoints();  // Actualizar los puntajes de las respuestas
+            updateChoiceHighlights();  // Resaltar las respuestas correctas
         }
     }
 
